@@ -67,7 +67,7 @@ const IncidentsList = () => {
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="accident">Accident</SelectItem>
                   <SelectItem value="fire">Fire</SelectItem>
                   <SelectItem value="crime">Crime</SelectItem>
@@ -84,7 +84,7 @@ const IncidentsList = () => {
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="reported">Reported</SelectItem>
                   <SelectItem value="investigating">Under Investigation</SelectItem>
                   <SelectItem value="resolved">Resolved</SelectItem>
