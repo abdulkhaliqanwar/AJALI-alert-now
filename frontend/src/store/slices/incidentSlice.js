@@ -14,9 +14,12 @@ const setAuthHeader = () => {
 // Async thunks
 export const fetchIncidents = createAsyncThunk(
   'incidents/fetchAll',
-  async (_, { rejectWithValue }) => {
+  async ({ page = 1, per_page = 10 } = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/incidents`, setAuthHeader());
+      const response = await axios.get(`${API_URL}/incidents`, {
+        ...setAuthHeader(),
+        params: { page, per_page }
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);

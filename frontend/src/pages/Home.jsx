@@ -14,14 +14,17 @@ const Home = () => {
     dispatch(fetchIncidents());
   }, [dispatch]);
 
+  // incidents is now an object with pagination metadata and incidents array
+  const incidentsArray = incidents?.incidents || [];
+
   // Get the most recent incidents (limit to 3)
-  const recentIncidents = incidents.slice(0, 3);
+  const recentIncidents = incidentsArray.slice(0, 3);
 
   // Calculate the center point for all incidents, or use Nairobi as default
-  const mapCenter = incidents.length > 0
+  const mapCenter = incidentsArray.length > 0
     ? {
-        lat: incidents.reduce((sum, inc) => sum + inc.latitude, 0) / incidents.length,
-        lng: incidents.reduce((sum, inc) => sum + inc.longitude, 0) / incidents.length,
+        lat: incidentsArray.reduce((sum, inc) => sum + inc.latitude, 0) / incidentsArray.length,
+        lng: incidentsArray.reduce((sum, inc) => sum + inc.longitude, 0) / incidentsArray.length,
       }
     : { lat: -1.2921, lng: 36.8219 }; // Nairobi coordinates
 
@@ -60,7 +63,7 @@ const Home = () => {
         <div className="h-[500px] rounded-lg overflow-hidden">
           <MapComponent
             center={mapCenter}
-            markers={incidents.map(incident => ({
+            markers={incidentsArray.map(incident => ({
               position: { lat: incident.latitude, lng: incident.longitude },
               title: incident.title,
             }))}

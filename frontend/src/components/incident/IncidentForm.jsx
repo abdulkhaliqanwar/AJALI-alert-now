@@ -18,6 +18,7 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
   });
   const [mediaPreview, setMediaPreview] = useState(null);
   const [markerPosition, setMarkerPosition] = useState(null);
+  const [localError, setLocalError] = useState(null);
 
   useEffect(() => {
     if (isEditing && incident) {
@@ -34,6 +35,15 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
       });
     }
   }, [isEditing, incident]);
+
+  useEffect(() => {
+    if (error) {
+      setLocalError(error);
+      console.error('Incident submission error:', error);
+    } else {
+      setLocalError(null);
+    }
+  }, [error]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -89,14 +99,15 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
       }
     } catch (err) {
       console.error('Failed to submit incident:', err);
+      setLocalError('Failed to submit incident. Please try again.');
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
+      {localError && (
         <div className="alert alert-error">
-          {error}
+          {localError}
         </div>
       )}
 

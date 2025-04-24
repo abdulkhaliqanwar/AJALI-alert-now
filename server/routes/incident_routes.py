@@ -48,15 +48,25 @@ def create_incident():
 @incident_bp.route('/', methods=['GET'])
 @jwt_required()
 def get_incidents():
-    """Get all incidents or filter by status."""
+    """Get all incidents or filter by status with pagination."""
     status = request.args.get('status')
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
     query = IncidentReport.query
 
     if status:
         query = query.filter(IncidentReport.status == status)
 
-    incidents = query.order_by(IncidentReport.created_at.desc()).all()
-    return jsonify([incident.to_dict() for incident in incidents]), 200
+    pagination = query.order_by(IncidentReport.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    incidents = pagination.items
+
+    return jsonify({
+        'incidents': [incident.to_dict() for incident in incidents],
+        'total': pagination.total,
+        'page': pagination.page,
+        'per_page': pagination.per_page,
+        'pages': pagination.pages
+    }), 200
 
 @incident_bp.route('/<int:incident_id>', methods=['GET'])
 @jwt_required()

@@ -7,7 +7,7 @@ import MapComponent from '../../components/map/MapComponent';
 
 const IncidentsList = () => {
   const dispatch = useDispatch();
-  const { incidents, isLoading, error } = useSelector(state => state.incidents);
+  const { incidents, isLoading, error, totalIncidents, currentPage, totalPages, perPage } = useSelector(state => state.incidents);
   const { user } = useSelector(state => state.auth);
 
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
@@ -19,16 +19,16 @@ const IncidentsList = () => {
 
   useEffect(() => {
     if (user) {
-      dispatch(fetchIncidents());
+      dispatch(fetchIncidents({ page: currentPage, per_page: perPage }));
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, currentPage, perPage]);
 
   const handleStatusChange = async (incidentId, newStatus) => {
     if (user?.role === 'admin') {
       try {
         await dispatch(updateIncidentStatus({ incidentId, status: newStatus })).unwrap();
         // Refresh incidents after status update
-        dispatch(fetchIncidents());
+        dispatch(fetchIncidents({ page: currentPage, per_page: perPage }));
       } catch (err) {
         console.error('Failed to update status:', err);
       }
@@ -53,6 +53,13 @@ const IncidentsList = () => {
         return 0;
     }
   });
+
+  // Pagination handlers
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      dispatch(fetchIncidents({ page: newPage, per_page: perPage }));
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -120,15 +127,37 @@ const IncidentsList = () => {
         </div>
       ) : viewMode === 'grid' ? (
         sortedIncidents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedIncidents.map(incident => (
-              <IncidentCard
-                key={incident.id}
-                incident={incident}
-                onStatusChange={handleStatusChange}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedIncidents.map(incident => (
+                <IncidentCard
+                  key={incident.id}
+                  incident={incident}
+                  onStatusChange={handleStatusChange}
+                />
+              ))}
+            </div>
+            {/* Pagination Controls */}
+            <div className="flex justify-center space-x-4 mt-6">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="btn btn-secondary"
+              >
+                Previous
+              </button>
+              <span className="flex items-center">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="btn btn-secondary"
+              >
+                Next
+              </button>
+            </div>
+          </>
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-500">No incidents found matching your criteria.</p>
