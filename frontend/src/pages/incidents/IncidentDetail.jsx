@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { fetchIncidents, deleteIncident } from '../../store/slices/incidentSlice';
 import { updateIncidentStatus } from '../../store/slices/adminSlice';
 import MapComponent from '../../components/map/MapComponent';
+import AdminStatusControl from '../../components/admin/AdminStatusControl';
 import { format } from 'date-fns';
 
 const IncidentDetail = () => {
@@ -16,6 +17,8 @@ const IncidentDetail = () => {
   
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [incident, setIncident] = useState(null);
+  const [isStatusUpdating, setIsStatusUpdating] = useState(false);
+  const [statusUpdateFeedback, setStatusUpdateFeedback] = useState(null);
 
   useEffect(() => {
     if (incidents.length === 0) {
@@ -28,12 +31,24 @@ const IncidentDetail = () => {
     setIncident(foundIncident);
   }, [incidents, id]);
 
-  const handleStatusChange = async (newStatus) => {
+  const handleStatusChange = async (incidentId, newStatus) => {
+    setIsStatusUpdating(true);
+    setStatusUpdateFeedback(null);
+    
     try {
-      await dispatch(updateIncidentStatus({ incidentId: incident.id, status: newStatus })).unwrap();
+      await dispatch(updateIncidentStatus({ incidentId, status: newStatus })).unwrap();
       dispatch(fetchIncidents());
+      setStatusUpdateFeedback({ type: 'success', message: 'Status updated successfully' });
     } catch (err) {
       console.error('Failed to update status:', err);
+      setStatusUpdateFeedback({ type: 'error', message: 'Failed to update status' });
+    } finally {
+      setIsStatusUpdating(false);
+      
+      // Clear feedback after 3 seconds
+      setTimeout(() => {
+        setStatusUpdateFeedback(null);
+      }, 3000);
     }
   };
 
@@ -190,16 +205,16 @@ const IncidentDetail = () => {
           {user?.role === 'admin' && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4">Manage Status</h2>
-              <select
-                value={incident.status}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                className="input w-full"
-              >
-                <option value="reported">Reported</option>
-                <option value="under investigation">Under Investigation</option>
-                <option value="resolved">Resolved</option>
-                <option value="rejected">Rejected</option>
-              </select>
+              {statusUpdateFeedback && (
+                <div className={`alert alert-${statusUpdateFeedback.type} mb-4`}>
+                  {statusUpdateFeedback.message}
+                </div>
+              )}
+              <AdminStatusControl
+                incident={incident}
+                onStatusChange={handleStatusChange}
+                isLoading={isStatusUpdating}
+              />
             </div>
           )}
 

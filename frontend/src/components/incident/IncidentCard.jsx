@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
+import { useState } from 'react';
+import AdminStatusControl from '../admin/AdminStatusControl';
 
 const IncidentCard = ({ incident, onStatusChange, showActions = true }) => {
   const { user } = useSelector(state => state.auth);
   const isAdmin = user?.role === 'admin';
   const isOwner = user?.id === incident.user_id;
+  const [isStatusUpdating, setIsStatusUpdating] = useState(false);
+  const [statusUpdateFeedback, setStatusUpdateFeedback] = useState(null);
 
   const getStatusBadgeClass = (status) => {
     const baseClasses = 'status-badge';
@@ -23,9 +27,24 @@ const IncidentCard = ({ incident, onStatusChange, showActions = true }) => {
     }
   };
 
-  const handleStatusChange = (e) => {
-    e.preventDefault();
-    onStatusChange(incident.id, e.target.value);
+  const handleStatusChange = async (incidentId, newStatus) => {
+    setIsStatusUpdating(true);
+    setStatusUpdateFeedback(null);
+    
+    try {
+      await onStatusChange(incidentId, newStatus);
+      setStatusUpdateFeedback({ type: 'success', message: 'Status updated successfully' });
+    } catch (err) {
+      console.error('Failed to update status:', err);
+      setStatusUpdateFeedback({ type: 'error', message: 'Failed to update status' });
+    } finally {
+      setIsStatusUpdating(false);
+      
+      // Clear feedback after 3 seconds
+      setTimeout(() => {
+        setStatusUpdateFeedback(null);
+      }, 3000);
+    }
   };
 
   return (
@@ -108,16 +127,18 @@ const IncidentCard = ({ incident, onStatusChange, showActions = true }) => {
             </div>
 
             {isAdmin && (
-              <select
-                value={incident.status}
-                onChange={handleStatusChange}
-                className="input text-sm py-1"
-              >
-                <option value="reported">Reported</option>
-                <option value="under investigation">Under Investigation</option>
-                <option value="resolved">Resolved</option>
-                <option value="rejected">Rejected</option>
-              </select>
+              <div>
+                {statusUpdateFeedback && (
+                  <div className={`alert alert-${statusUpdateFeedback.type} text-sm mb-2`}>
+                    {statusUpdateFeedback.message}
+                  </div>
+                )}
+                <AdminStatusControl
+                  incident={incident}
+                  onStatusChange={handleStatusChange}
+                  isLoading={isStatusUpdating}
+                />
+              </div>
             )}
           </div>
         )}
