@@ -82,12 +82,28 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate required fields before submitting
+    if (!formData.title || !formData.description || formData.latitude === null || formData.longitude === null) {
+      setLocalError('Please fill in all required fields including location.');
+      return;
+    }
+
     const submitData = new FormData();
     Object.keys(formData).forEach(key => {
       if (formData[key] !== null) {
-        submitData.append(key, formData[key]);
+        // Convert latitude and longitude to strings
+        if (key === 'latitude' || key === 'longitude') {
+          submitData.append(key, formData[key].toString());
+        } else {
+          submitData.append(key, formData[key]);
+        }
       }
     });
+
+    // Debug: log FormData entries
+    for (let pair of submitData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
 
     try {
       if (isEditing) {

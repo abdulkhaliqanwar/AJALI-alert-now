@@ -11,11 +11,17 @@ incident_bp = Blueprint('incidents', __name__)
 def create_incident():
     """Create a new incident report."""
     current_user_id = get_jwt_identity()
-    data = request.form.to_dict()
-    
+    print("Content-Type:", request.content_type)
+    print("Form data:", request.form)
+    print("Files:", request.files)
+
+    title = request.form.get('title')
+    description = request.form.get('description')
+    latitude = request.form.get('latitude')
+    longitude = request.form.get('longitude')
+
     # Validate required fields
-    required_fields = ['title', 'description', 'latitude', 'longitude']
-    if not all(field in data for field in required_fields):
+    if not all([title, description, latitude, longitude]):
         return jsonify({'error': 'Missing required fields'}), 400
 
     try:
@@ -24,13 +30,20 @@ def create_incident():
         if 'media' in request.files:
             media_file = request.files['media']
             upload_result = upload_file(media_file)
+            
+            # Check for failed upload
+            if not upload_result:
+                return jsonify({'error': 'Media upload failed'}), 500
+            
             media_url = upload_result.get('url')
+            print("Media uploaded successfully:", media_url)
 
+        # Create the incident
         incident = IncidentReport(
-            title=data['title'],
-            description=data['description'],
-            latitude=float(data['latitude']),
-            longitude=float(data['longitude']),
+            title=title,
+            description=description,
+            latitude=float(latitude),
+            longitude=float(longitude),
             media_url=media_url,
             user_id=current_user_id,
             status='reported'
@@ -43,6 +56,7 @@ def create_incident():
 
     except Exception as e:
         db.session.rollback()
+        print("Error in create_incident:", str(e))
         return jsonify({'error': str(e)}), 500
 
 @incident_bp.route('/', methods=['GET'])
@@ -74,37 +88,43 @@ def get_incident(incident_id):
     """Get a specific incident."""
     incident = IncidentReport.query.get_or_404(incident_id)
     return jsonify(incident.to_dict()), 200
-
 @incident_bp.route('/<int:incident_id>', methods=['PUT'])
 @jwt_required()
 def update_incident(incident_id):
     """Update an incident report."""
     current_user_id = get_jwt_identity()
     incident = IncidentReport.query.get_or_404(incident_id)
-    
-    # Only allow updates by the creator or admin
+
     user = User.query.get(current_user_id)
     if incident.user_id != current_user_id and user.role != 'admin':
         return jsonify({'error': 'Unauthorized'}), 403
 
-    data = request.form.to_dict()
-    
-    try:
-        # Update fields if provided
-        if 'title' in data:
-            incident.title = data['title']
-        if 'description' in data:
-            incident.description = data['description']
-        if 'latitude' in data:
-            incident.latitude = float(data['latitude'])
-        if 'longitude' in data:
-            incident.longitude = float(data['longitude'])
+    title = request.form.get('title')
+    description = request.form.get('description')
+    latitude = request.form.get('latitude')
+    longitude = request.form.get('longitude')
 
-        # Handle new media upload if present
+    try:
+        if title:
+            incident.title = title
+        if description:
+            incident.description = description
+        if latitude:
+            incident.latitude = float(latitude)
+        if longitude:
+            incident.longitude = float(longitude)
+
+        # Handle new media upload
         if 'media' in request.files:
             media_file = request.files['media']
             upload_result = upload_file(media_file)
+
+            # Validate Cloudinary upload result
+            if not upload_result:
+                return jsonify({'error': 'Media upload failed'}), 500
+
             incident.media_url = upload_result.get('url')
+            print("Media updated:", incident.media_url)
 
         incident.updated_at = datetime.utcnow()
         db.session.commit()
@@ -113,7 +133,9 @@ def update_incident(incident_id):
 
     except Exception as e:
         db.session.rollback()
+        print("Error in update_incident:", str(e))
         return jsonify({'error': str(e)}), 500
+
 
 @incident_bp.route('/<int:incident_id>', methods=['DELETE'])
 @jwt_required()
@@ -143,3 +165,27 @@ def get_user_incidents():
     incidents = IncidentReport.query.filter_by(user_id=current_user_id)\
         .order_by(IncidentReport.created_at.desc()).all()
     return jsonify([incident.to_dict() for incident in incidents]), 200
+
+@incident_bp.route('/<int:incident_id>/status', methods=['PATCH'])
+@jwt_required()
+def update_incident_status(incident_id):
+    """Allow admin to change the status of an incident report."""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if user.role != 'admin':
+        return jsonify({'error': 'Only admins can update incident status'}), 403
+
+    incident = IncidentReport.query.get_or_404(incident_id)
+    new_status = request.json.get('status')
+
+    if new_status not in ['under investigation', 'resolved', 'rejected']:
+        return jsonify({'error': 'Invalid status'}), 400
+
+    try:
+        incident.status = new_status
+        db.session.commit()
+        return jsonify(incident.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500

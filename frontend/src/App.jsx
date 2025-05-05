@@ -17,15 +17,19 @@ import EditIncident from './pages/incidents/EditIncident';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 
-// Protected Route Component
-const ProtectedRoute = ({ children, requireAdmin }) => {
-  const { isAuthenticated, user } = useSelector(state => state.auth);
-  
-  if (!isAuthenticated) {
+// ✅ Protected Route with authLoaded check
+const ProtectedRoute = ({ children, requireAdmin = false }) => {
+  const { isAuthenticated, user, authLoaded } = useSelector(state => state.auth);
+
+  if (!authLoaded) {
+    return <div className="p-4 text-center">Loading...</div>; // or a spinner
+  }
+
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" />;
   }
 
-  if (requireAdmin && user?.role !== 'admin') {
+  if (requireAdmin && user.role !== 'admin') {
     return <Navigate to="/" />;
   }
 

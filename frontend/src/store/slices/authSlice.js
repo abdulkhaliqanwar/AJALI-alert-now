@@ -46,7 +46,7 @@ export const getCurrentUser = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { error: 'Failed to get user data' });
     }
   }
 );
@@ -56,7 +56,8 @@ const initialState = {
   token: localStorage.getItem('token'),
   isAuthenticated: false,
   isLoading: false,
-  error: null
+  error: null,
+  authLoaded: false  // ✅ Important flag
 };
 
 const authSlice = createSlice({
@@ -69,6 +70,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      state.authLoaded = true;
     },
     clearError: (state) => {
       state.error = null;
@@ -86,11 +88,14 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.access_token;
+        state.authLoaded = true;
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload?.error || 'Login failed';
+        state.authLoaded = true;
       })
+
       // Signup
       .addCase(signup.pending, (state) => {
         state.isLoading = true;
@@ -101,20 +106,25 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.access_token;
+        state.authLoaded = true;
       })
       .addCase(signup.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload?.error || 'Signup failed';
+        state.authLoaded = true;
       })
+
       // Get Current User
       .addCase(getCurrentUser.pending, (state) => {
         state.isLoading = true;
         state.error = null;
+        state.authLoaded = false;
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
         state.user = action.payload;
+        state.authLoaded = true;
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -123,6 +133,7 @@ const authSlice = createSlice({
         state.token = null;
         localStorage.removeItem('token');
         state.error = action.payload?.error || 'Failed to get user data';
+        state.authLoaded = true;
       });
   }
 });

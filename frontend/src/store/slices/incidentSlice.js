@@ -3,7 +3,6 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api';
 
-// Helper function to set auth header
 const setAuthHeader = () => {
   const token = localStorage.getItem('token');
   return {
@@ -11,7 +10,7 @@ const setAuthHeader = () => {
   };
 };
 
-// Async thunks
+// Async Thunks
 export const fetchIncidents = createAsyncThunk(
   'incidents/fetchAll',
   async ({ page = 1, per_page = 10 } = {}, { rejectWithValue }) => {
@@ -41,31 +40,18 @@ export const fetchUserIncidents = createAsyncThunk(
 
 export const createIncident = createAsyncThunk(
   'incidents/create',
-  async (incidentData, { rejectWithValue }) => {
+  async (formData, { rejectWithValue }) => {
     try {
-      const formData = new FormData();
-      Object.keys(incidentData).forEach(key => {
-        if (key === 'media' && incidentData[key]) {
-          formData.append('media', incidentData[key]);
-        } else {
-          formData.append(key, incidentData[key]);
+      const response = await axios.post(`${API_URL}/incidents`, formData, {
+        headers: {
+          ...setAuthHeader().headers,
+          'Content-Type': 'multipart/form-data'
         }
       });
-
-      const response = await axios.post(
-        `${API_URL}/incidents`,
-        formData,
-        {
-          ...setAuthHeader(),
-          headers: {
-            ...setAuthHeader().headers,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      console.error('Incident upload error:', error);
+      return rejectWithValue(error.response?.data || { error: 'Failed to create incident' });
     }
   }
 );
@@ -75,28 +61,26 @@ export const updateIncident = createAsyncThunk(
   async ({ id, data }, { rejectWithValue }) => {
     try {
       const formData = new FormData();
-      Object.keys(data).forEach(key => {
-        if (key === 'media' && data[key]) {
-          formData.append('media', data[key]);
-        } else {
-          formData.append(key, data[key]);
+      Object.entries(data).forEach(([key, value]) => {
+        if (
+          value !== null &&
+          value !== undefined &&
+          value !== '' &&
+          !(key === 'media' && !(value instanceof File))
+        ) {
+          formData.append(key, value);
         }
       });
 
-      const response = await axios.put(
-        `${API_URL}/incidents/${id}`,
-        formData,
-        {
-          ...setAuthHeader(),
-          headers: {
-            ...setAuthHeader().headers,
-            'Content-Type': 'multipart/form-data'
-          }
+      const response = await axios.put(`${API_URL}/incidents/${id}`, formData, {
+        headers: {
+          ...setAuthHeader().headers,
+          'Content-Type': 'multipart/form-data'
         }
-      );
+      });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { error: 'Failed to update incident' });
     }
   }
 );
@@ -109,6 +93,28 @@ export const deleteIncident = createAsyncThunk(
       return id;
     } catch (error) {
       return rejectWithValue(error.response.data);
+    }
+  }
+);
+
+export const updateIncidentStatus = createAsyncThunk(
+  'incidents/updateStatus',
+  async ({ id, status }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.patch(
+        `${API_URL}/incidents/${id}/status`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { error: 'Failed to update status' });
     }
   }
 );
@@ -138,20 +144,23 @@ const incidentSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch all incidents
       .addCase(fetchIncidents.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(fetchIncidents.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.incidents = action.payload;
+        state.incidents = action.payload.incidents || [];
+        state.totalIncidents = action.payload.total || 0;
+        state.currentPage = action.payload.page || 1;
+        state.perPage = action.payload.per_page || 10;
+        state.totalPages = action.payload.pages || 1;
       })
       .addCase(fetchIncidents.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload?.error || 'Failed to fetch incidents';
       })
-      // Fetch user incidents
+
       .addCase(fetchUserIncidents.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -164,7 +173,7 @@ const incidentSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload?.error || 'Failed to fetch user incidents';
       })
-      // Create incident
+
       .addCase(createIncident.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -179,7 +188,7 @@ const incidentSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload?.error || 'Failed to create incident';
       })
-      // Update incident
+
       .addCase(updateIncident.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -198,7 +207,7 @@ const incidentSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload?.error || 'Failed to update incident';
       })
-      // Delete incident
+
       .addCase(deleteIncident.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -212,6 +221,25 @@ const incidentSlice = createSlice({
       .addCase(deleteIncident.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload?.error || 'Failed to delete incident';
+      })
+
+      .addCase(updateIncidentStatus.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateIncidentStatus.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.incidents = state.incidents.map(incident =>
+          incident.id === action.payload.id ? action.payload : incident
+        );
+        state.userIncidents = state.userIncidents.map(incident =>
+          incident.id === action.payload.id ? action.payload : incident
+        );
+        state.successMessage = 'Incident status updated';
+      })
+      .addCase(updateIncidentStatus.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.error || 'Failed to update incident status';
       });
   }
 });
