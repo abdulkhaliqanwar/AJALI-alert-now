@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { signup } from '../../store/slices/authSlice';
+import { register } from '../../store/slices/authSlice';
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -64,9 +64,11 @@ const Register = () => {
 
     try {
       // Remove confirmPassword before sending to API
-      const { confirmPassword, ...signupData } = formData;
-      await dispatch(signup(signupData)).unwrap();
-      navigate('/');
+      const { confirmPassword: _, ...signupData } = formData;
+      const result = await dispatch(register(signupData)).unwrap();
+      if (result) {
+        navigate('/');
+      }
     } catch (err) {
       console.error('Registration failed:', err);
     }
@@ -88,7 +90,7 @@ const Register = () => {
         </div>
 
         {error && (
-          <div className="alert alert-error" role="alert">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
             {error}
           </div>
         )}
@@ -96,7 +98,7 @@ const Register = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="username" className="form-label">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
                 Username
               </label>
               <input
@@ -105,7 +107,7 @@ const Register = () => {
                 type="text"
                 autoComplete="username"
                 required
-                className={`input ${formErrors.username ? 'border-red-500' : ''}`}
+                className={`mt-1 block w-full px-3 py-2 border ${formErrors.username ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
                 placeholder="Choose a username"
                 value={formData.username}
                 onChange={handleInputChange}
@@ -116,7 +118,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="email" className="form-label">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
               <input
@@ -125,7 +127,7 @@ const Register = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className={`input ${formErrors.email ? 'border-red-500' : ''}`}
+                className={`mt-1 block w-full px-3 py-2 border ${formErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
                 placeholder="Enter your email"
                 value={formData.email}
                 onChange={handleInputChange}
@@ -136,7 +138,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="form-label">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <input
@@ -145,7 +147,7 @@ const Register = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className={`input ${formErrors.password ? 'border-red-500' : ''}`}
+                className={`mt-1 block w-full px-3 py-2 border ${formErrors.password ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
                 placeholder="Create a password"
                 value={formData.password}
                 onChange={handleInputChange}
@@ -156,7 +158,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="form-label">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirm Password
               </label>
               <input
@@ -165,7 +167,7 @@ const Register = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className={`input ${formErrors.confirmPassword ? 'border-red-500' : ''}`}
+                className={`mt-1 block w-full px-3 py-2 border ${formErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
                 placeholder="Confirm your password"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
@@ -178,11 +180,11 @@ const Register = () => {
 
           <button
             type="submit"
-            className="btn btn-primary w-full"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             disabled={isLoading}
           >
             {isLoading ? (
-              <span className="flex items-center justify-center">
+              <span className="flex items-center">
                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>

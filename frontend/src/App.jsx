@@ -1,35 +1,26 @@
-import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { getCurrentUser } from './store/slices/authSlice';
-
-// Layout components
+import { useSelector } from 'react-redux';
 import MainLayout from './components/layout/MainLayout';
-
-// Page components
 import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
-import ReportIncident from './pages/incidents/ReportIncident';
-import IncidentsList from './pages/incidents/IncidentsList';
-import IncidentDetail from './pages/incidents/IncidentDetail';
-import EditIncident from './pages/incidents/EditIncident';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import IncidentsList from './pages/incidents/IncidentsList';
+import IncidentDetail from './pages/incidents/IncidentDetail';
+import ReportIncident from './pages/incidents/ReportIncident';
+import EditIncident from './pages/incidents/EditIncident';
+import UserSettings from './pages/settings/UserSettings';
 
-// ✅ Protected Route with authLoaded check
+// Protected Route Component
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
-  const { isAuthenticated, user, authLoaded } = useSelector(state => state.auth);
-
-  if (!authLoaded) {
-    return <div className="p-4 text-center">Loading...</div>; // or a spinner
-  }
-
-  if (!isAuthenticated || !user) {
+  const { isAuthenticated, user } = useSelector(state => state.auth);
+  
+  if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
 
-  if (requireAdmin && user.role !== 'admin') {
+  if (requireAdmin && user?.role !== 'admin') {
     return <Navigate to="/" />;
   }
 
@@ -37,15 +28,6 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
 };
 
 function App() {
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      dispatch(getCurrentUser());
-    }
-  }, [dispatch]);
-
   return (
     <Router>
       <MainLayout>
@@ -54,24 +36,26 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route
-            path="/incidents"
-            element={
-              <ProtectedRoute>
-                <IncidentsList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/incidents/:id"
-            element={
-              <ProtectedRoute>
-                <IncidentDetail />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/incidents" element={<IncidentsList />} />
+          <Route path="/incidents/:id" element={<IncidentDetail />} />
 
           {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <UserDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/report-incident"
             element={
@@ -89,26 +73,13 @@ function App() {
             }
           />
           <Route
-            path="/dashboard"
+            path="/settings"
             element={
               <ProtectedRoute>
-                <UserDashboard />
+                <UserSettings />
               </ProtectedRoute>
             }
           />
-
-          {/* Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requireAdmin>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </MainLayout>
     </Router>

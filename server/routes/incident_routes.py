@@ -2,7 +2,9 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import IncidentReport, User, db
 from utils.cloudinary_utils import upload_file
+from utils.notification_utils import notify_status_change
 from datetime import datetime
+import os
 
 incident_bp = Blueprint('incidents', __name__)
 
@@ -29,6 +31,10 @@ def create_incident():
         media_url = None
         if 'media' in request.files:
             media_file = request.files['media']
+            # Reset file pointer
+            media_file.seek(0)
+            
+            # Create upload result
             upload_result = upload_file(media_file)
             
             # Check for failed upload
@@ -88,6 +94,7 @@ def get_incident(incident_id):
     """Get a specific incident."""
     incident = IncidentReport.query.get_or_404(incident_id)
     return jsonify(incident.to_dict()), 200
+
 @incident_bp.route('/<int:incident_id>', methods=['PUT'])
 @jwt_required()
 def update_incident(incident_id):
@@ -117,6 +124,9 @@ def update_incident(incident_id):
         # Handle new media upload
         if 'media' in request.files:
             media_file = request.files['media']
+            # Reset file pointer
+            media_file.seek(0)
+            
             upload_result = upload_file(media_file)
 
             # Validate Cloudinary upload result
@@ -135,7 +145,6 @@ def update_incident(incident_id):
         db.session.rollback()
         print("Error in update_incident:", str(e))
         return jsonify({'error': str(e)}), 500
-
 
 @incident_bp.route('/<int:incident_id>', methods=['DELETE'])
 @jwt_required()
@@ -183,8 +192,14 @@ def update_incident_status(incident_id):
         return jsonify({'error': 'Invalid status'}), 400
 
     try:
+        old_status = incident.status
         incident.status = new_status
         db.session.commit()
+
+        # Send notification if status has changed
+        if old_status != new_status:
+            notify_status_change(incident_id, new_status)
+
         return jsonify(incident.to_dict()), 200
     except Exception as e:
         db.session.rollback()

@@ -10,6 +10,9 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='user')  # 'user' or 'admin'
+    phone_number = db.Column(db.String(20))  # Added phone number field
+    email_notifications = db.Column(db.Boolean, default=True)  # Added email notification preference
+    sms_notifications = db.Column(db.Boolean, default=True)   # Added SMS notification preference
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     incidents = db.relationship('IncidentReport', backref='reporter', lazy=True)
 
@@ -20,6 +23,19 @@ class User(db.Model):
     def check_password(self, password):
         """Check if the provided password matches the hash."""
         return bcrypt.check_password_hash(self.password_hash, password)
+
+    def to_dict(self):
+        """Convert user to dictionary."""
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'role': self.role,
+            'phone_number': self.phone_number,
+            'email_notifications': self.email_notifications,
+            'sms_notifications': self.sms_notifications,
+            'created_at': self.created_at.isoformat()
+        }
 
 class IncidentReport(db.Model):
     """Model for storing incident reports."""

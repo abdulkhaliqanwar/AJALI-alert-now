@@ -25,25 +25,39 @@ def upload_file(file):
             # Secure the filename
             filename = secure_filename(file.filename)
             
-            # Determine resource type based on file extension
-            extension = filename.rsplit('.', 1)[1].lower()
-            resource_type = 'video' if extension in ['mp4', 'mov'] else 'image'
+            # Create a temporary file path
+            temp_path = os.path.join('/tmp', filename)
             
-            # Upload to cloudinary
-            result = cloudinary.uploader.upload(
-                file,
-                resource_type=resource_type,
-                folder="ajali_incidents/",  # Organize files in a folder
-                use_filename=True,  # Use original filename
-                unique_filename=True,  # Ensure filename is unique
-                overwrite=False  # Don't overwrite existing files
-            )
-            
-            return {
-                'url': result['secure_url'],
-                'public_id': result['public_id'],
-                'resource_type': result['resource_type']
-            }
+            try:
+                # Save the file temporarily
+                file.save(temp_path)
+                
+                # Determine resource type based on file extension
+                extension = filename.rsplit('.', 1)[1].lower()
+                resource_type = 'video' if extension in ['mp4', 'mov'] else 'image'
+                
+                # Upload to cloudinary with raw file path
+                result = cloudinary.uploader.upload(
+                    temp_path,
+                    resource_type=resource_type,
+                    folder="ajali_incidents/",  # Organize files in a folder
+                    use_filename=True,  # Use original filename
+                    unique_filename=True,  # Ensure filename is unique
+                    overwrite=False,  # Don't overwrite existing files
+                    api_key=os.getenv('CLOUDINARY_API_KEY'),
+                    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+                    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME')
+                )
+                
+                return {
+                    'url': result['secure_url'],
+                    'public_id': result['public_id'],
+                    'resource_type': result['resource_type']
+                }
+            finally:
+                # Clean up temporary file
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
             
         except Exception as e:
             print(f"Error uploading file to Cloudinary: {str(e)}")

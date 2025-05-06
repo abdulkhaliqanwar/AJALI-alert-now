@@ -1,90 +1,109 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models import User, db
-from sqlalchemy.exc import IntegrityError
+from datetime import timedelta
 
 auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/signup', methods=['POST'])
-def signup():
+@auth_bp.route('/register', methods=['POST'])
+def register():
     """Register a new user."""
     data = request.get_json()
+    
+    if User.query.filter_by(username=data.get('username')).first():
+        return jsonify({'error': 'Username already exists'}), 400
+    
+    if User.query.filter_by(email=data.get('email')).first():
+        return jsonify({'error': 'Email already exists'}), 400
 
-    # Validate required fields
-    required_fields = ['username', 'email', 'password']
-    if not all(field in data for field in required_fields):
-        return jsonify({'error': 'Missing required fields'}), 400
+    user = User(
+        username=data.get('username'),
+        email=data.get('email'),
+        role='user'
+    )
+    user.set_password(data.get('password'))
 
     try:
-        user = User(
-            username=data['username'],
-            email=data['email'],
-            role='user'  # Default role
-        )
-        user.set_password(data['password'])
-        
         db.session.add(user)
         db.session.commit()
-
-        # Create access token
-        access_token = create_access_token(identity=user.id)
+        
+        access_token = create_access_token(
+            identity=user.id,
+            expires_delta=timedelta(days=1)
+        )
         
         return jsonify({
-            'message': 'User created successfully',
-            'access_token': access_token,
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'role': user.role
-            }
+            'token': access_token,
+            'user': user.to_dict()
         }), 201
-
-    except IntegrityError:
-        db.session.rollback()
-        return jsonify({'error': 'Username or email already exists'}), 409
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    """Authenticate a user and return a token."""
-    # Try to get JSON data first, then fall back to form data
-    data = request.get_json() if request.is_json else request.form
+    """Login user and return token."""
+    data = request.get_json()
+    user = User.query.filter_by(username=data.get('username')).first()
 
-    if not data or not data.get('email', None) or not data.get('password', None):
-        return jsonify({'error': 'Missing email or password'}), 400
-
-    user = User.query.filter_by(email=data['email']).first()
-
-    if user and user.check_password(data['password']):
-        access_token = create_access_token(identity=user.id)
+    if user and user.check_password(data.get('password')):
+        access_token = create_access_token(
+            identity=user.id,
+            expires_delta=timedelta(days=1)
+        )
         return jsonify({
-            'access_token': access_token,
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'role': user.role
-            }
+            'token': access_token,
+            'user': user.to_dict()
         }), 200
+    
+    return jsonify({'error': 'Invalid credentials'}), 401
 
-    return jsonify({'error': 'Invalid email or password'}), 401
-
-@auth_bp.route('/me', methods=['GET'])
+@auth_bp.route('/notification-preferences', methods=['PATCH'])
 @jwt_required()
-def get_current_user():
-    """Get current user details."""
+def update_notification_preferences():
+    """Update user notification preferences."""
     current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+    user = User.query.get_or_404(current_user_id)
+    data = request.get_json()
 
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
+    try:
+        if 'email_notifications' in data:
+            user.email_notifications = data['email_notifications']
+        if 'sms_notifications' in data:
+            user.sms_notifications = data['sms_notifications']
+        if 'phone_number' in data:
+            user.phone_number = data['phone_number']
 
-    return jsonify({
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'role': user.role
-    }), 200
+        db.session.commit()
+        return jsonify(user.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@auth_bp.route('/profile', methods=['PATCH'])
+@jwt_required()
+def update_profile():
+    """Update user profile."""
+    current_user_id = get_jwt_identity()
+    user = User.query.get_or_404(current_user_id)
+    data = request.get_json()
+
+    try:
+        if 'username' in data and data['username'] != user.username:
+            if User.query.filter_by(username=data['username']).first():
+                return jsonify({'error': 'Username already exists'}), 400
+            user.username = data['username']
+            
+        if 'email' in data and data['email'] != user.email:
+            if User.query.filter_by(email=data['email']).first():
+                return jsonify({'error': 'Email already exists'}), 400
+            user.email = data['email']
+
+        if 'password' in data:
+            user.set_password(data['password'])
+
+        db.session.commit()
+        return jsonify(user.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
