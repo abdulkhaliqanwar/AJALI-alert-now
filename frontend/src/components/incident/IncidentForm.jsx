@@ -71,12 +71,14 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
   };
 
   const handleMarkerPositionChange = (position) => {
-    setMarkerPosition(position);
-    setFormData(prev => ({
-      ...prev,
-      latitude: position.lat,
-      longitude: position.lng
-    }));
+    if (position && typeof position.lat === 'number' && typeof position.lng === 'number') {
+      setMarkerPosition(position);
+      setFormData(prev => ({
+        ...prev,
+        latitude: position.lat,
+        longitude: position.lng
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -99,11 +101,6 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
         }
       }
     });
-
-    // Debug: log FormData entries
-    for (let pair of submitData.entries()) {
-      console.log(pair[0] + ': ' + pair[1]);
-    }
 
     try {
       if (isEditing) {
@@ -163,7 +160,7 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
           markerPosition={markerPosition}
           onMarkerPositionChange={handleMarkerPositionChange}
         />
-        {markerPosition && (
+        {markerPosition && typeof markerPosition.lat === 'number' && typeof markerPosition.lng === 'number' && (
           <p className="mt-2 text-sm text-gray-600">
             Selected coordinates: {markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}
           </p>
