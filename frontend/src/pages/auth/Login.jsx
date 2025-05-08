@@ -27,7 +27,7 @@ const Login = () => {
     try {
       await dispatch(login(formData)).unwrap();
       // Redirect to the page they were trying to access, or home
-      const redirectTo = location.state?.from || '/';
+      const redirectTo = location.state?.from || '/dashboard';
       navigate(redirectTo);
     } catch (err) {
       console.error('Login failed:', err);

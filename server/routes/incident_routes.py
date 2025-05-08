@@ -39,7 +39,9 @@ def create_incident():
             
             # Check for failed upload
             if not upload_result:
-                return jsonify({'error': 'Media upload failed'}), 500
+                error_message = 'Media upload failed'
+                print(error_message)
+                return jsonify({'error': error_message}), 500
             
             media_url = upload_result.get('url')
             print("Media uploaded successfully:", media_url)
@@ -64,6 +66,7 @@ def create_incident():
         db.session.rollback()
         print("Error in create_incident:", str(e))
         return jsonify({'error': str(e)}), 500
+
 
 @incident_bp.route('/', methods=['GET'])
 @jwt_required()

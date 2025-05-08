@@ -61,6 +61,8 @@ def upload_file(file):
             
         except Exception as e:
             print(f"Error uploading file to Cloudinary: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return None
     
     return None
