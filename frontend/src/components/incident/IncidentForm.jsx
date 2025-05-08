@@ -53,9 +53,24 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
     }));
   };
 
+  const allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov'];
+
   const handleMediaChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const extension = file.name.split('.').pop().toLowerCase();
+      if (!allowedExtensions.includes(extension)) {
+        setLocalError('Unsupported file type. Allowed types: png, jpg, jpeg, gif, mp4, mov.');
+        setFormData(prev => ({
+          ...prev,
+          media: null
+        }));
+        setMediaPreview(null);
+        return;
+      } else {
+        setLocalError(null);
+      }
+
       setFormData(prev => ({
         ...prev,
         media: file
@@ -108,7 +123,7 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
         navigate(`/incidents/${incident.id}`);
       } else {
         await dispatch(createIncident(submitData)).unwrap();
-        navigate('/incidents');
+        navigate('/incidents', { state: { refresh: true } });
       }
     } catch (err) {
       console.error('Failed to submit incident:', err);

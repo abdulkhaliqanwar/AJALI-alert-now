@@ -4,9 +4,11 @@ import { fetchIncidents } from '../../store/slices/incidentSlice';
 import { updateIncidentStatus } from '../../store/slices/adminSlice';
 import IncidentCard from '../../components/incident/IncidentCard';
 import MapComponent from '../../components/map/MapComponent';
+import { useLocation } from 'react-router-dom';
 
 const IncidentsList = () => {
   const dispatch = useDispatch();
+  const location = useLocation();
   const { incidents, isLoading, error, totalIncidents, currentPage, totalPages, perPage } = useSelector(state => state.incidents);
   const { user } = useSelector(state => state.auth);
 
@@ -22,6 +24,14 @@ const IncidentsList = () => {
       dispatch(fetchIncidents({ page: currentPage, per_page: perPage }));
     }
   }, [dispatch, user, currentPage, perPage]);
+
+  useEffect(() => {
+    if (location.state?.refresh) {
+      dispatch(fetchIncidents({ page: currentPage, per_page: perPage }));
+      // Clear the refresh flag in location state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, dispatch, currentPage, perPage]);
 
   const handleStatusChange = async (incidentId, newStatus) => {
     if (user?.role === 'admin') {
