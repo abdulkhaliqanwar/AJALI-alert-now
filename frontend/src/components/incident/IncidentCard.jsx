@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
 
-const IncidentCard = ({ incident }) => {
+const IncidentCard = ({ incident, onStatusChange }) => {
   const { user } = useSelector(state => state.auth);
   const isOwner = user?.id === incident.user_id;
   const isAdmin = user?.role === 'admin';
@@ -53,6 +53,12 @@ const IncidentCard = ({ incident }) => {
     }
   };
 
+  const handleStatusChange = (e) => {
+    if (onStatusChange) {
+      onStatusChange(incident.id, e.target.value);
+    }
+  };
+
   return (
     <div className="bg-kenya-white border border-gray-200 rounded-lg p-6 group hover:shadow-lg transition-all duration-300">
       <div className="flex justify-between items-start mb-4">
@@ -64,15 +70,30 @@ const IncidentCard = ({ incident }) => {
             Reported {format(new Date(incident.created_at), 'MMM d, yyyy h:mm a')}
           </p>
         </div>
-        <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${getStatusStyles(incident.status)}`}>
-          {getStatusIcon(incident.status)}
-          <span className="text-sm font-medium capitalize">{incident.status}</span>
+        <div>
+          {isAdmin ? (
+            <select
+              value={incident.status}
+              onChange={handleStatusChange}
+              className={`text-sm font-medium capitalize rounded-md border border-gray-300 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-kenya-red focus:ring-opacity-50 ${getStatusStyles(incident.status)}`}
+            >
+              <option value="reported">Reported</option>
+              <option value="under investigation">Under Investigation</option>
+              <option value="resolved">Resolved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          ) : (
+            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${getStatusStyles(incident.status)}`}>
+              {getStatusIcon(incident.status)}
+              <span className="text-sm font-medium capitalize">{incident.status}</span>
+            </div>
+          )}
+          </div>
         </div>
-      </div>
 
-      <p className="text-gray-600 mb-4 line-clamp-2">
-        {incident.description}
-      </p>
+        <p className="text-gray-600 mb-4 line-clamp-2">
+          {incident.description}
+        </p>
 
       {incident.media_url && (
         <div className="mb-4 relative overflow-hidden rounded-lg aspect-video bg-gray-100">

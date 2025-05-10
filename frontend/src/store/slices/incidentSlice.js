@@ -125,7 +125,11 @@ const initialState = {
   currentIncident: null,
   isLoading: false,
   error: null,
-  successMessage: null
+  successMessage: null,
+  currentPage: 1,
+  perPage: 10,
+  totalIncidents: 0,
+  totalPages: 1
 };
 
 const incidentSlice = createSlice({
@@ -140,6 +144,9 @@ const incidentSlice = createSlice({
     },
     setCurrentIncident: (state, action) => {
       state.currentIncident = action.payload;
+    },
+    setCurrentPage: (state, action) => {
+      state.currentPage = action.payload;
     }
   },
   extraReducers: (builder) => {

@@ -44,7 +44,10 @@ def register():
 def login():
     """Login user and return token."""
     data = request.get_json()
-    user = User.query.filter_by(username=data.get('username')).first()
+    identifier = data.get('username') or data.get('email')
+    user = User.query.filter(
+        (User.username == identifier) | (User.email == identifier)
+    ).first()
 
     if user and user.check_password(data.get('password')):
         access_token = create_access_token(

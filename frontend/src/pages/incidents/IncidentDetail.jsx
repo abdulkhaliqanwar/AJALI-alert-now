@@ -28,6 +28,7 @@ const IncidentDetail = () => {
 
   useEffect(() => {
     const foundIncident = incidents.find(inc => inc.id === parseInt(id));
+    console.log('Incident media_url:', foundIncident?.media_url);
     setIncident(foundIncident);
   }, [incidents, id]);
 

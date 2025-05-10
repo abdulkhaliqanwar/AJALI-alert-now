@@ -1,12 +1,19 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { clearSuccessMessage } from '../../store/slices/incidentSlice';
 import IncidentForm from '../../components/incident/IncidentForm';
 
 const ReportIncident = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { isAuthenticated } = useSelector(state => state.auth);
   const { successMessage } = useSelector(state => state.incidents);
+
+  useEffect(() => {
+    // Clear successMessage on mount to avoid stale state
+    dispatch(clearSuccessMessage());
+  }, [dispatch]);
 
   useEffect(() => {
     // Redirect to login if not authenticated

@@ -6,11 +6,13 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import UserDashboard from './pages/UserDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import DashboardRedirect from './pages/DashboardRedirect';
 import IncidentsList from './pages/incidents/IncidentsList';
 import IncidentDetail from './pages/incidents/IncidentDetail';
 import ReportIncident from './pages/incidents/ReportIncident';
 import EditIncident from './pages/incidents/EditIncident';
 import UserSettings from './pages/settings/UserSettings';
+import RoleSelection from './pages/RoleSelection';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
@@ -33,7 +35,8 @@ function App() {
       <MainLayout>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<RoleSelection />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/incidents" element={<IncidentsList />} />
@@ -42,6 +45,14 @@ function App() {
           {/* Protected Routes */}
           <Route
             path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardRedirect />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/user"
             element={
               <ProtectedRoute>
                 <UserDashboard />
