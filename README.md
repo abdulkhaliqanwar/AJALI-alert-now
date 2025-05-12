@@ -2,9 +2,9 @@
 
 The frontend application for Ajali! - an emergency incident reporting system for Kenya.
 
-# render backend deployed link - 
+# render backend deployed link -  https://ajali-alert-now-wu16.onrender.com
 
-https://ajali-alert-now-wu16.onrender.com
+# render frontend deployed link - https://ajali-frontend.onrender.com
 
 ## Features
 
