@@ -107,6 +107,10 @@ Axios is used for API requests with the following features:
 4. Push to the branch
 5. Create a Pull Request
 
+# DATABASE NAME= ajali_dev
+
+# Password = ajali_password
+
 ## License
 
 MIT License
