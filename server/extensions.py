@@ -19,7 +19,7 @@ def init_extensions(app):
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
-    cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
+    cors.init_app(app, resources={r"/api/*": {"origins": app.config.get("CORS_ORIGINS", ["http://localhost:5173"])}} , supports_credentials=True)
     mail.init_app(app)
     migrate.init_app(app, db)
 
@@ -39,7 +39,7 @@ def init_extensions(app):
 
     @jwt.user_lookup_loader
     def user_lookup_callback(_jwt_header, jwt_data):
-        from models import User
+        from .models import User
         identity = jwt_data["sub"]
         return User.query.filter_by(id=identity).one_or_none()
 

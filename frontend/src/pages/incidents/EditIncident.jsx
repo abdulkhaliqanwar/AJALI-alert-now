@@ -21,6 +21,12 @@ const EditIncident = () => {
   }, [dispatch, incidents.length]);
 
   useEffect(() => {
+    if (!incident && !isLoading) {
+      dispatch(fetchIncidents({ page: 1, per_page: 100 }));
+    }
+  }, [incident, isLoading, dispatch]);
+
+  useEffect(() => {
     // Redirect if not authenticated
     if (!user) {
       navigate('/login', { state: { from: `/incidents/${id}/edit` } });

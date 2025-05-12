@@ -28,8 +28,16 @@ const IncidentDetail = () => {
 
   useEffect(() => {
     const foundIncident = incidents.find(inc => inc.id === parseInt(id));
-    setIncident(foundIncident);
-  }, [incidents, id]);
+    if (!foundIncident) {
+      // Fetch incident by id if not found in store
+      dispatch(fetchIncidents({ page: 1, per_page: 100 })).then(() => {
+        const incidentFromStore = incidents.find(inc => inc.id === parseInt(id));
+        setIncident(incidentFromStore);
+      });
+    } else {
+      setIncident(foundIncident);
+    }
+  }, [incidents, id, dispatch]);
 
   const handleStatusChange = async (incidentId, newStatus) => {
     setIsStatusUpdating(true);
@@ -143,23 +151,27 @@ const IncidentDetail = () => {
           </div>
 
           {/* Media */}
-          {incident.media_url && (
+          {incident.media_urls && incident.media_urls.length > 0 && (
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4">Media</h2>
-              <div className="rounded-lg overflow-hidden">
-                {incident.media_url.endsWith('.mp4') ? (
-                  <video
-                    src={incident.media_url}
-                    controls
-                    className="w-full"
-                  />
-                ) : (
-                  <img
-                    src={incident.media_url}
-                    alt="Incident"
-                    className="w-full"
-                  />
-                )}
+              <div className="rounded-lg overflow-hidden space-y-4">
+                {incident.media_urls.map((mediaUrl, index) => (
+                  mediaUrl.endsWith('.mp4') ? (
+                    <video
+                      key={index}
+                      src={mediaUrl}
+                      controls
+                      className="w-full"
+                    />
+                  ) : (
+                    <img
+                      key={index}
+                      src={mediaUrl}
+                      alt={`Incident media ${index + 1}`}
+                      className="w-full"
+                    />
+                  )
+                ))}
               </div>
             </div>
           )}
@@ -222,7 +234,7 @@ const IncidentDetail = () => {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-semibold mb-4">Reporter Information</h2>
             <p className="text-gray-700">
-              Reported by: <span className="font-medium">{incident.reporter?.username}</span>
+              Reported by: <span className="font-medium">{incident.reporter_username}</span>
             </p>
           </div>
 

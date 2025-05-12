@@ -1,6 +1,6 @@
 from flask_mail import Message
-from extensions import mail, db
-from models import User
+from ..extensions import mail, db
+from ..models import User
 import os
 from twilio.rest import Client
 

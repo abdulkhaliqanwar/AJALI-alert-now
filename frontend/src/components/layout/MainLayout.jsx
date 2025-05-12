@@ -60,34 +60,34 @@ const MainLayout = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-white font-sans">
       {/* Navigation */}
       <nav className={`fixed w-full z-50 transition-all duration-200 ${
-        isScrolled ? 'bg-kenya-white/80 backdrop-blur-md shadow-sm' : 'bg-kenya-white'
-      }`}>
+        isScrolled ? 'bg-white shadow-md' : 'bg-white'
+      } border-b border-gray-200`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               {/* Logo */}
               <Link to="/" className="flex-shrink-0 flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg bg-kenya-red flex items-center justify-center">
-                  <span className="text-xl font-bold text-kenya-white">A</span>
+                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md">
+                  <span className="text-2xl font-bold text-white">A</span>
                 </div>
-                <span className="text-2xl font-bold text-kenya-black">
+                <span className="text-3xl font-bold text-gray-900 tracking-wide">
                   Ajali!
                 </span>
               </Link>
-
               {/* Desktop Navigation */}
               <div className="hidden sm:ml-8 sm:flex sm:space-x-2">
                 {[
                   { path: '/', label: 'Home', icon: (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                     </svg>
                   )},
                   { path: '/incidents', label: 'Incidents', icon: (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                       <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                     </svg>
@@ -97,11 +97,7 @@ const MainLayout = ({ children }) => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
-                      isActive(item.path)
-                        ? 'bg-kenya-red text-kenya-white'
-                        : 'text-gray-700 hover:bg-kenya-red hover:bg-opacity-10 hover:text-kenya-red'
-                    }`}
+                    className={`flex items-center px-4 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 mx-1`}
                   >
                     {item.icon}
                     <span className="ml-2">{item.label}</span>
@@ -109,24 +105,23 @@ const MainLayout = ({ children }) => {
                 ))}
               </div>
             </div>
-
             {/* Auth Buttons */}
             <div className="hidden sm:ml-6 sm:flex sm:items-center">
               {isAuthenticated ? (
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full bg-kenya-green bg-opacity-10 flex items-center justify-center">
-                      <span className="text-sm font-medium text-kenya-green">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-md">
+                      <span className="text-base font-bold text-white">
                         {user?.username[0].toUpperCase()}
                       </span>
                     </div>
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-base text-gray-900">
                       {user?.username}
                     </span>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="px-4 py-2 text-sm font-medium text-kenya-red bg-kenya-red bg-opacity-10 rounded-md hover:bg-opacity-20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-kenya-red"
+                    className="px-5 py-2 text-base text-white bg-blue-600 rounded-md shadow-md hover:bg-blue-700 transition duration-150"
                   >
                     Logout
                   </button>
@@ -135,25 +130,24 @@ const MainLayout = ({ children }) => {
                 <div className="space-x-4">
                   <Link 
                     to="/login" 
-                    className="px-4 py-2 text-sm font-medium text-kenya-black bg-kenya-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-kenya-red"
+                    className="px-5 py-2 text-base text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition duration-150"
                   >
                     Login
                   </Link>
                   <Link 
                     to="/register" 
-                    className="px-4 py-2 text-sm font-medium text-kenya-white bg-kenya-red rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-kenya-red"
+                    className="px-5 py-2 text-base text-white bg-blue-600 rounded-md hover:bg-blue-700 transition duration-150"
                   >
                     Register
                   </Link>
                 </div>
               )}
             </div>
-
             {/* Mobile menu button */}
             <div className="flex items-center sm:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-kenya-red"
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-600"
               >
                 <span className="sr-only">Open main menu</span>
                 <svg
@@ -180,7 +174,7 @@ const MainLayout = ({ children }) => {
         </div>
 
         {/* Mobile menu */}
-        <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} sm:hidden bg-kenya-white border-t border-gray-100`}>
+        <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} sm:hidden bg-white border-t border-gray-200`}>
           <div className="pt-2 pb-3 space-y-1 px-4">
             {[
               { path: '/', label: 'Home' },
@@ -192,8 +186,8 @@ const MainLayout = ({ children }) => {
                 to={item.path}
                 className={`block py-2 px-3 rounded-md text-base font-medium ${
                   isActive(item.path)
-                    ? 'bg-kenya-red text-kenya-white'
-                    : 'text-gray-700 hover:bg-kenya-red hover:bg-opacity-10 hover:text-kenya-red'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-blue-600 hover:text-white'
                 }`}
               >
                 <span className="flex items-center">
@@ -207,10 +201,8 @@ const MainLayout = ({ children }) => {
             {isAuthenticated ? (
               <div className="px-4 space-y-3">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-kenya-green bg-opacity-10 flex items-center justify-center">
-                    <span className="text-sm font-medium text-kenya-green">
-                      {user?.username[0].toUpperCase()}
-                    </span>
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                    <span className="text-sm font-medium text-white">{user?.username}</span>
                   </div>
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-700">{user?.username}</p>
@@ -218,7 +210,7 @@ const MainLayout = ({ children }) => {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-sm font-medium text-kenya-red hover:bg-kenya-red hover:bg-opacity-10 rounded-md"
+                  className="block w-full text-left px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md"
                 >
                   Logout
                 </button>
@@ -227,13 +219,13 @@ const MainLayout = ({ children }) => {
               <div className="px-4 space-y-3">
                 <Link
                   to="/login"
-                  className="block w-full text-center py-2 text-sm font-medium text-kenya-black hover:bg-gray-50 rounded-md border border-gray-300"
+                  className="block w-full text-center py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md border border-gray-300"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="block w-full text-center py-2 text-sm font-medium bg-kenya-red text-kenya-white rounded-md hover:bg-opacity-90"
+                  className="block w-full text-center py-2 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
                   Register
                 </Link>
@@ -251,37 +243,37 @@ const MainLayout = ({ children }) => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-kenya-white border-t border-gray-100">
+      <footer className="bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <Link to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg bg-kenya-red flex items-center justify-center">
-                  <span className="text-xl font-bold text-kenya-white">A</span>
+                <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+                  <span className="text-xl font-bold text-white">A</span>
                 </div>
-                <span className="text-xl font-bold text-kenya-black">Ajali!</span>
+                <span className="text-xl font-bold text-gray-900">Ajali!</span>
               </Link>
               <p className="mt-4 text-sm text-gray-600">
                 Emergency Incident Reporting System for Kenya. Report incidents quickly and efficiently.
               </p>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-kenya-black uppercase tracking-wider">Quick Links</h3>
+              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Quick Links</h3>
               <ul className="mt-4 space-y-2">
                 <li>
-                  <Link to="/incidents" className="text-sm text-gray-600 hover:text-kenya-red">
+                  <Link to="/incidents" className="text-sm text-gray-600 hover:text-blue-600">
                     View Incidents
                   </Link>
                 </li>
                 <li>
-                  <Link to="/report-incident" className="text-sm text-gray-600 hover:text-kenya-red">
+                  <Link to="/report-incident" className="text-sm text-gray-600 hover:text-blue-600">
                     Report Incident
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-kenya-black uppercase tracking-wider">Emergency Contacts</h3>
+              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Emergency Contacts</h3>
               <ul className="mt-4 space-y-2">
                 <li className="text-sm text-gray-600">Police: 999</li>
                 <li className="text-sm text-gray-600">Ambulance: 911</li>
@@ -289,7 +281,7 @@ const MainLayout = ({ children }) => {
               </ul>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t border-gray-100">
+          <div className="mt-8 pt-8 border-t border-gray-200">
             <p className="text-center text-sm text-gray-500">
               © {new Date().getFullYear()} Ajali! All rights reserved.
             </p>

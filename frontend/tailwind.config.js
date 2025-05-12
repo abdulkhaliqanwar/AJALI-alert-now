@@ -6,6 +6,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -28,6 +29,11 @@ export default {
           900: '#1e3a8a',
           950: '#172554',
         },
+        neonBlue: '#00eaff',
+        neonPink: '#ff00ea',
+        neonGreen: '#39ff14',
+        glassBg: 'rgba(30, 41, 59, 0.7)',
+        glassBorder: 'rgba(255,255,255,0.2)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
@@ -56,10 +62,17 @@ export default {
       boxShadow: {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
         'soft-lg': '0 10px 25px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.01)',
+        neon: '0 0 10px #00eaff, 0 0 20px #00eaff',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      },
+      fontFamily: {
+        futuristic: ['Orbitron', 'Montserrat', 'sans-serif'],
+      },
+      backdropBlur: {
+        xs: '2px',
       },
     },
   },

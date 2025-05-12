@@ -2,11 +2,11 @@ import os
 from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
-from config import config
-from extensions import init_extensions
-from routes.auth_routes import auth_bp
-from routes.incident_routes import incident_bp
-from routes.admin_routes import admin_bp
+from .config import config
+from .extensions import init_extensions
+from .routes.auth_routes import auth_bp
+from .routes.incident_routes import incident_bp
+from .routes.admin_routes import admin_bp
 
 # Load environment variables from .env file
 load_dotenv()

@@ -33,6 +33,10 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
         lat: incident.latitude,
         lng: incident.longitude
       });
+      if (incident.media_urls && incident.media_urls.length > 0) {
+        // Show preview of first media item
+        setMediaPreview(incident.media_urls[0]);
+      }
     }
   }, [isEditing, incident]);
 
@@ -56,6 +60,19 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
   const handleMediaChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setLocalError('File size must be less than 5MB');
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime'];
+      if (!allowedTypes.includes(file.type)) {
+        setLocalError('Invalid file type. Please upload an image (JPEG, PNG, GIF) or video (MP4, MOV)');
+        return;
+      }
+
       setFormData(prev => ({
         ...prev,
         media: file
@@ -83,26 +100,25 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLocalError(null);
 
-    // Validate required fields before submitting
+    // Validate required fields
     if (!formData.title || !formData.description || formData.latitude === null || formData.longitude === null) {
       setLocalError('Please fill in all required fields including location.');
       return;
     }
 
-    const submitData = new FormData();
-    Object.keys(formData).forEach(key => {
-      if (formData[key] !== null) {
-        // Convert latitude and longitude to strings
-        if (key === 'latitude' || key === 'longitude') {
-          submitData.append(key, formData[key].toString());
-        } else {
-          submitData.append(key, formData[key]);
-        }
-      }
-    });
-
     try {
+      const submitData = new FormData();
+      submitData.append('title', formData.title);
+      submitData.append('description', formData.description);
+      submitData.append('latitude', formData.latitude.toString());
+      submitData.append('longitude', formData.longitude.toString());
+      
+      if (formData.media) {
+        submitData.append('media', formData.media);
+      }
+
       if (isEditing) {
         await dispatch(updateIncident({ id: incident.id, data: submitData })).unwrap();
         navigate(`/incidents/${incident.id}`);
@@ -112,7 +128,7 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
       }
     } catch (err) {
       console.error('Failed to submit incident:', err);
-      setLocalError('Failed to submit incident. Please try again.');
+      setLocalError(err.message || 'Failed to submit incident. Please try again.');
     }
   };
 
@@ -160,7 +176,7 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
           markerPosition={markerPosition}
           onMarkerPositionChange={handleMarkerPositionChange}
         />
-        {markerPosition && typeof markerPosition.lat === 'number' && typeof markerPosition.lng === 'number' && (
+        {markerPosition && (
           <p className="mt-2 text-sm text-gray-600">
             Selected coordinates: {markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}
           </p>
@@ -179,6 +195,9 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
           accept="image/*,video/*"
           className="input"
         />
+        <p className="text-sm text-gray-500 mt-1">
+          Supported formats: JPEG, PNG, GIF, MP4, MOV (max 5MB)
+        </p>
         {mediaPreview && (
           <div className="media-preview mt-4">
             {formData.media?.type.startsWith('image/') ? (
@@ -193,25 +212,21 @@ const IncidentForm = ({ incident = null, isEditing = false }) => {
                 controls
                 className="max-w-full h-auto rounded-lg"
               />
+            ) : mediaPreview.startsWith('http') ? (
+              mediaPreview.endsWith('.mp4') ? (
+                <video
+                  src={mediaPreview}
+                  controls
+                  className="max-w-full h-auto rounded-lg"
+                />
+              ) : (
+                <img
+                  src={mediaPreview}
+                  alt="Current media"
+                  className="max-w-full h-auto rounded-lg"
+                />
+              )
             ) : null}
-          </div>
-        )}
-        {isEditing && incident.media_url && !mediaPreview && (
-          <div className="media-preview mt-4">
-            {incident.media_url.endsWith('.mp4') ? (
-              <video
-                src={incident.media_url}
-                controls
-                className="max-w-full h-auto rounded-lg"
-              />
-            ) : (
-              <img
-                src={incident.media_url}
-                alt="Current media"
-                className="max-w-full h-auto rounded-lg"
-              />
-            )}
-            <p className="text-sm text-gray-500 mt-2">Current media</p>
           </div>
         )}
       </div>

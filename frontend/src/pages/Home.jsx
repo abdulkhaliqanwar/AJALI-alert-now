@@ -11,8 +11,10 @@ const Home = () => {
   const { isAuthenticated } = useSelector(state => state.auth);
 
   useEffect(() => {
-    dispatch(fetchIncidents());
-  }, [dispatch]);
+    if (isAuthenticated) {
+      dispatch(fetchIncidents());
+    }
+  }, [dispatch, isAuthenticated]);
 
   // incidents is now an object with pagination metadata and incidents array
   const incidentsArray = incidents?.incidents || [];
@@ -28,6 +30,56 @@ const Home = () => {
       }
     : { lat: -1.2921, lng: 36.8219 }; // Nairobi coordinates
 
+  if (!isAuthenticated) {
+    return (
+      <div className="space-y-12">
+        {/* Hero Section */}
+        <section className="text-center py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-lg shadow-sm">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+            Welcome to Ajali!
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+            Your platform for reporting and tracking emergency incidents across Kenya.
+            Help make your community safer by reporting incidents in real-time.
+          </p>
+          <div className="flex justify-center gap-4">
+            <Link to="/register" className="btn btn-primary text-lg px-8 py-3">
+              Get Started
+            </Link>
+            <Link to="/login" className="btn btn-secondary text-lg px-8 py-3">
+              Sign In
+            </Link>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-xl font-bold mb-4">Real-time Reporting</h3>
+            <p className="text-gray-600">
+              Report incidents as they happen with our easy-to-use interface.
+              Include photos, videos, and precise location data.
+            </p>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-xl font-bold mb-4">Location Tracking</h3>
+            <p className="text-gray-600">
+              Use our interactive map to view incident locations and track
+              updates in your area.
+            </p>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-xl font-bold mb-4">Status Updates</h3>
+            <p className="text-gray-600">
+              Stay informed with real-time status updates on reported incidents
+              from authorities.
+            </p>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-12">
       {/* Hero Section */}
@@ -40,20 +92,9 @@ const Home = () => {
           Help make your community safer by reporting incidents in real-time.
         </p>
         <div className="flex justify-center gap-4">
-          {isAuthenticated ? (
-            <Link to="/report-incident" className="btn btn-primary text-lg px-8 py-3">
-              Report an Incident
-            </Link>
-          ) : (
-            <>
-              <Link to="/register" className="btn btn-primary text-lg px-8 py-3">
-                Get Started
-              </Link>
-              <Link to="/login" className="btn btn-secondary text-lg px-8 py-3">
-                Sign In
-              </Link>
-            </>
-          )}
+          <Link to="/report-incident" className="btn btn-primary text-lg px-8 py-3">
+            Report an Incident
+          </Link>
         </div>
       </section>
 

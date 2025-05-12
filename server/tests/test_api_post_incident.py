@@ -1,5 +1,6 @@
 import unittest
 import io
+from unittest.mock import patch
 from server.app import create_app
 from flask_jwt_extended import create_access_token
 
@@ -17,7 +18,10 @@ class IncidentApiTestCase(unittest.TestCase):
     def tearDown(self):
         self.app_context.pop()
 
-    def test_create_incident(self):
+    @patch('server.routes.incident_routes.upload_file_to_s3')
+    def test_create_incident(self, mock_upload):
+        mock_upload.return_value = 'https://dummyurl.com/test.jpg'
+
         data = {
             'title': 'Test Incident',
             'description': 'This is a test incident',
@@ -37,6 +41,8 @@ class IncidentApiTestCase(unittest.TestCase):
             headers=headers,
             content_type='multipart/form-data'
         )
+
+        print(response.data)  # Debug output
 
         self.assertEqual(response.status_code, 201)
         json_data = response.get_json()

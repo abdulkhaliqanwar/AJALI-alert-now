@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const setAuthHeader = () => {
   const token = localStorage.getItem('token');
@@ -21,19 +21,22 @@ export const fetchIncidents = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { error: 'Failed to fetch incidents' });
     }
   }
 );
 
 export const fetchUserIncidents = createAsyncThunk(
   'incidents/fetchUserIncidents',
-  async (_, { rejectWithValue }) => {
+  async ({ page = 1, per_page = 10 } = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/incidents/user/incidents`, setAuthHeader());
+      const response = await axios.get(`${API_URL}/incidents`, {
+        ...setAuthHeader(),
+        params: { page, per_page }
+      });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { error: 'Failed to fetch user incidents' });
     }
   }
 );
@@ -42,7 +45,15 @@ export const createIncident = createAsyncThunk(
   'incidents/create',
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/incidents`, formData, {
+      // Ensure FormData is properly constructed
+      const submitData = new FormData();
+      for (const [key, value] of formData.entries()) {
+        if (value !== null && value !== undefined && value !== '') {
+          submitData.append(key, value);
+        }
+      }
+
+      const response = await axios.post(`${API_URL}/incidents`, submitData, {
         headers: {
           ...setAuthHeader().headers,
           'Content-Type': 'multipart/form-data'
@@ -60,19 +71,15 @@ export const updateIncident = createAsyncThunk(
   'incidents/update',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        if (
-          value !== null &&
-          value !== undefined &&
-          value !== '' &&
-          !(key === 'media' && !(value instanceof File))
-        ) {
-          formData.append(key, value);
+      // Ensure FormData is properly constructed
+      const submitData = new FormData();
+      for (const [key, value] of data.entries()) {
+        if (value !== null && value !== undefined && value !== '') {
+          submitData.append(key, value);
         }
-      });
+      }
 
-      const response = await axios.put(`${API_URL}/incidents/${id}`, formData, {
+      const response = await axios.put(`${API_URL}/incidents/${id}`, submitData, {
         headers: {
           ...setAuthHeader().headers,
           'Content-Type': 'multipart/form-data'
@@ -80,6 +87,7 @@ export const updateIncident = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
+      console.error('Incident update error:', error);
       return rejectWithValue(error.response?.data || { error: 'Failed to update incident' });
     }
   }
@@ -92,7 +100,7 @@ export const deleteIncident = createAsyncThunk(
       await axios.delete(`${API_URL}/incidents/${id}`, setAuthHeader());
       return id;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || { error: 'Failed to delete incident' });
     }
   }
 );
@@ -101,13 +109,12 @@ export const updateIncidentStatus = createAsyncThunk(
   'incidents/updateStatus',
   async ({ id, status }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.patch(
         `${API_URL}/incidents/${id}/status`,
         { status },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            ...setAuthHeader().headers,
             'Content-Type': 'application/json',
           }
         }
@@ -125,7 +132,13 @@ const initialState = {
   currentIncident: null,
   isLoading: false,
   error: null,
-  successMessage: null
+  successMessage: null,
+  pagination: {
+    total: 0,
+    page: 1,
+    perPage: 10,
+    totalPages: 1
+  }
 };
 
 const incidentSlice = createSlice({
@@ -151,10 +164,12 @@ const incidentSlice = createSlice({
       .addCase(fetchIncidents.fulfilled, (state, action) => {
         state.isLoading = false;
         state.incidents = action.payload.incidents || [];
-        state.totalIncidents = action.payload.total || 0;
-        state.currentPage = action.payload.page || 1;
-        state.perPage = action.payload.per_page || 10;
-        state.totalPages = action.payload.pages || 1;
+        state.pagination = {
+          total: action.payload.total || 0,
+          page: action.payload.page || 1,
+          perPage: action.payload.per_page || 10,
+          totalPages: action.payload.pages || 1
+        };
       })
       .addCase(fetchIncidents.rejected, (state, action) => {
         state.isLoading = false;
@@ -167,7 +182,13 @@ const incidentSlice = createSlice({
       })
       .addCase(fetchUserIncidents.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.userIncidents = action.payload;
+        state.userIncidents = action.payload.incidents || [];
+        state.pagination = {
+          total: action.payload.total || 0,
+          page: action.payload.page || 1,
+          perPage: action.payload.per_page || 10,
+          totalPages: action.payload.pages || 1
+        };
       })
       .addCase(fetchUserIncidents.rejected, (state, action) => {
         state.isLoading = false;

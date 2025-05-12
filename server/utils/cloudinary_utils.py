@@ -2,6 +2,15 @@ import cloudinary
 import cloudinary.uploader
 from werkzeug.utils import secure_filename
 import os
+from flask import current_app
+
+# Configure Cloudinary
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+    secure=True
+)
 
 def allowed_file(filename):
     """Check if the file extension is allowed."""
@@ -20,50 +29,53 @@ def upload_file(file):
         dict: Cloudinary upload response containing URL and other metadata
         None: If upload fails
     """
-    if file and allowed_file(file.filename):
+    if not file or not file.filename:
+        print("No file provided")
+        return None
+
+    if not allowed_file(file.filename):
+        print(f"File type not allowed: {file.filename}")
+        return None
+
+    try:
+        # Secure the filename
+        filename = secure_filename(file.filename)
+        
+        # Create a temporary file path
+        temp_path = os.path.join('/tmp', filename)
+        
         try:
-            # Secure the filename
-            filename = secure_filename(file.filename)
+            # Save the file temporarily
+            file.save(temp_path)
             
-            # Create a temporary file path
-            temp_path = os.path.join('/tmp', filename)
+            # Determine resource type based on file extension
+            extension = filename.rsplit('.', 1)[1].lower()
+            resource_type = 'video' if extension in ['mp4', 'mov'] else 'image'
             
-            try:
-                # Save the file temporarily
-                file.save(temp_path)
-                
-                # Determine resource type based on file extension
-                extension = filename.rsplit('.', 1)[1].lower()
-                resource_type = 'video' if extension in ['mp4', 'mov'] else 'image'
-                
-                # Upload to cloudinary with raw file path
-                result = cloudinary.uploader.upload(
-                    temp_path,
-                    resource_type=resource_type,
-                    folder="ajali_incidents/",  # Organize files in a folder
-                    use_filename=True,  # Use original filename
-                    unique_filename=True,  # Ensure filename is unique
-                    overwrite=False,  # Don't overwrite existing files
-                    api_key=os.getenv('CLOUDINARY_API_KEY'),
-                    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
-                    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME')
-                )
-                
-                return {
-                    'url': result['secure_url'],
-                    'public_id': result['public_id'],
-                    'resource_type': result['resource_type']
-                }
-            finally:
-                # Clean up temporary file
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
+            # Upload to cloudinary
+            result = cloudinary.uploader.upload(
+                temp_path,
+                resource_type=resource_type,
+                folder="ajali_incidents/",
+                use_filename=True,
+                unique_filename=True,
+                overwrite=False
+            )
             
-        except Exception as e:
-            print(f"Error uploading file to Cloudinary: {str(e)}")
-            return None
-    
-    return None
+            print(f"Upload successful: {result['secure_url']}")
+            return {
+                'secure_url': result['secure_url'],
+                'public_id': result['public_id'],
+                'resource_type': result['resource_type']
+            }
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+        
+    except Exception as e:
+        print(f"Error uploading file to Cloudinary: {str(e)}")
+        return None
 
 def delete_file(public_id, resource_type='image'):
     """

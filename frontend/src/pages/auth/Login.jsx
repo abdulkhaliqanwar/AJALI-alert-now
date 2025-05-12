@@ -10,7 +10,7 @@ const Login = () => {
   const { isLoading, error } = useSelector(state => state.auth);
 
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
 
@@ -58,20 +58,20 @@ const Login = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="form-label">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="input"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleInputChange}
-              />
+            <label htmlFor="username" className="form-label">
+              Username
+            </label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              autoComplete="username"
+              required
+              className="input"
+              placeholder="Enter your username"
+              value={formData.username}
+              onChange={handleInputChange}
+            />
             </div>
 
             <div>
