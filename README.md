@@ -4,7 +4,7 @@ The frontend application for Ajali! - an emergency incident reporting system for
 
 # render backend deployed link -  https://ajali-alert-now-wu16.onrender.com
 
-# render frontend deployed link - https://ajali-frontend.onrender.com
+# render frontend deployed link - https://ajali-alert-frontend.onrender.com
 
 ## Features
 
